@@ -1,0 +1,6 @@
+@MamlatdarEcourt_HostAddress = http://localhost:5276
+
+GET {{MamlatdarEcourt_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
