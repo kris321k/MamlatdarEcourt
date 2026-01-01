@@ -1,49 +1,56 @@
 using Microsoft.AspNetCore.Mvc;
 using MamlatdarEcourt.DTOS;
 using MamlatdarEcourt.Services;
+using System.Runtime.CompilerServices;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
+using Microsoft.AspNetCore.Identity;
 
 namespace MamlatdarEcourt.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
+
+
     public class UserAuthController : ControllerBase
     {
-        private readonly AuthService _authService;
+        private readonly LitigantAuthService _litigantAuthSerive;
 
-        public UserAuthController(AuthService authService)
+        public UserAuthController(LitigantAuthService litigantAuthService)
         {
-            _authService = authService;
+            _litigantAuthSerive = litigantAuthService;
         }
 
-        [HttpPost("register")]
-        public async Task<IActionResult> Register([FromBody] UserRegister dto)
+
+        [HttpPost("RegisterLitigant")]
+
+        public async Task<IActionResult> registerLitigant([FromBody] UserRegister userDto)
         {
             if (!ModelState.IsValid)
             {
-                return BadRequest(new
-                {
-                    Message = "Validation failed.",
-                    Errors = ModelState
-                        .Where(x => x.Value!.Errors.Any())
-                        .ToDictionary(
-                            x => x.Key,
-                            x => x.Value!.Errors.Select(e => e.ErrorMessage).ToArray()
-                        )
-                });
+                return BadRequest(ModelState);
             }
 
-            var result = await _authService.RegisterUserAsync(dto);
+
+            if (await _litigantAuthSerive.FindLigitantByEmail(userDto.Email) != null)
+            {
+                return Conflict(new { Error = "The email already exists" });
+            }
+
+            var result = await _litigantAuthSerive.RegisterLigitantAsync(userDto);
 
             if (!result.Succeeded)
             {
-                return BadRequest(new
+                var errors = result.Errors.Select(a => new
                 {
-                    Message = "User registration failed.",
-                    Errors = result.Errors.Select(e => e.Description)
+                    a.Code,
+                    a.Description
                 });
             }
 
-            return StatusCode(201, new { message = "User created successfully" });
+            return Ok(new { Message = "the object is created succesfully" });
         }
+
     }
+
 }

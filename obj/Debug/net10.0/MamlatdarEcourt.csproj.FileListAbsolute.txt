@@ -167,3 +167,7 @@ C:\Users\kri23\MamlatdarEcourt\obj\Debug\net10.0\refint\MamlatdarEcourt.dll
 C:\Users\kri23\MamlatdarEcourt\obj\Debug\net10.0\MamlatdarEcourt.pdb
 C:\Users\kri23\MamlatdarEcourt\obj\Debug\net10.0\MamlatdarEcourt.genruntimeconfig.cache
 C:\Users\kri23\MamlatdarEcourt\obj\Debug\net10.0\ref\MamlatdarEcourt.dll
+C:\Users\kri23\MamlatdarEcourt\bin\Debug\net10.0\Microsoft.Extensions.Caching.StackExchangeRedis.dll
+C:\Users\kri23\MamlatdarEcourt\bin\Debug\net10.0\Pipelines.Sockets.Unofficial.dll
+C:\Users\kri23\MamlatdarEcourt\bin\Debug\net10.0\StackExchange.Redis.dll
+C:\Users\kri23\MamlatdarEcourt\obj\Debug\net10.0\MamlatdarEcourt.sourcelink.json

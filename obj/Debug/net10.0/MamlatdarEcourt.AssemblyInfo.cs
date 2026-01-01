@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("MamlatdarEcourt")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+194872790c78420f7426fa4457b93159775475bc")]
 [assembly: System.Reflection.AssemblyProductAttribute("MamlatdarEcourt")]
 [assembly: System.Reflection.AssemblyTitleAttribute("MamlatdarEcourt")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

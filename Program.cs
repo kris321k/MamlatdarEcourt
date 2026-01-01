@@ -3,6 +3,8 @@ using Microsoft.EntityFrameworkCore;
 using System.Text.Json.Serialization;
 using MamlatdarEcourt.Data;
 using MamlatdarEcourt.Models;
+using MamlatdarEcourt.Services;
+using MamlatdarEcourt.Repositories;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -31,6 +33,9 @@ builder.Services.AddAuthentication();
 
 // Add Authorization
 builder.Services.AddAuthorization();
+builder.Services.AddScoped<LitigantAuthService>();
+builder.Services.AddScoped<LitigantRepository>(); 
+
 
 
 var app = builder.Build();
