@@ -1,56 +1,87 @@
 using Microsoft.AspNetCore.Mvc;
 using MamlatdarEcourt.DTOS;
 using MamlatdarEcourt.Services;
-using System.Runtime.CompilerServices;
-using Microsoft.EntityFrameworkCore.Metadata.Internal;
-using Microsoft.AspNetCore.Mvc.ModelBinding;
-using Microsoft.AspNetCore.Identity;
 
 namespace MamlatdarEcourt.Controllers
 {
     [ApiController]
-    [Route("api/[controller]")]
-
-
+    [Route("api/auth")]
     public class UserAuthController : ControllerBase
     {
-        private readonly LitigantAuthService _litigantAuthSerive;
+        private readonly LitigantAuthService _litigantAuthService;
+        private readonly OtpService _otpService;
 
-        public UserAuthController(LitigantAuthService litigantAuthService)
+        public UserAuthController(
+            LitigantAuthService litigantAuthService,
+            OtpService otpService)
         {
-            _litigantAuthSerive = litigantAuthService;
+            _litigantAuthService = litigantAuthService;
+            _otpService = otpService;
         }
 
 
-        [HttpPost("RegisterLitigant")]
-
-        public async Task<IActionResult> registerLitigant([FromBody] UserRegister userDto)
+        [HttpPost("request-otp")]
+        public async Task<IActionResult> RequestOtp([FromBody] UserRegister userDto)
         {
             if (!ModelState.IsValid)
-            {
                 return BadRequest(ModelState);
-            }
 
+            var existingUser =
+                await _litigantAuthService.FindLigitantByEmail(userDto.Email);
 
-            if (await _litigantAuthSerive.FindLigitantByEmail(userDto.Email) != null)
+            if (existingUser != null)
+                return Conflict("User with this email already exists.");
+
+            try
             {
-                return Conflict(new { Error = "The email already exists" });
-            }
+                var sessionId =
+                    await _otpService.SendOtpAsync(userDto.Email, userDto);
 
-            var result = await _litigantAuthSerive.RegisterLigitantAsync(userDto);
-
-            if (!result.Succeeded)
-            {
-                var errors = result.Errors.Select(a => new
+                return Ok(new
                 {
-                    a.Code,
-                    a.Description
+                    message = "OTP sent successfully",
+                    otpSessionId = sessionId
                 });
             }
-
-            return Ok(new { Message = "the object is created succesfully" });
+            catch
+            {
+                return StatusCode(500,
+                    "Failed to send OTP. Please try again.");
+            }
         }
 
-    }
+        [HttpPost("verify-otp")]
+        public async Task<IActionResult> VerifyOtp(
+            [FromBody] VerifyDto otpDto)
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
 
+            var isValid =
+                _otpService.ValidateOtp(otpDto.SessionId, otpDto.Otp);
+
+            if (!isValid)
+                return BadRequest("Invalid or expired OTP.");
+
+            var sessionData =
+                _otpService.GetUserData(otpDto.SessionId);
+
+            if (sessionData == null || sessionData.PendingUser == null)
+                return BadRequest("OTP session expired.");
+
+            var result =
+                await _litigantAuthService
+                    .RegisterLigitantAsync(sessionData.PendingUser);
+
+            if (!result.Succeeded)
+                return BadRequest("Error creating litigant.");
+
+            _otpService.Clear(otpDto.SessionId);
+
+            return Ok(new
+            {
+                message = "Litigant registered successfully"
+            });
+        }
+    }
 }

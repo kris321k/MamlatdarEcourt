@@ -12,19 +12,19 @@ namespace MamlatdarEcourt.Models
     public class User : IdentityUser
     {
 
-        public string? FirstName{get; set;}
+        public string? FirstName { get; set; }
 
         [Required]
-        public string? LastName{get; set;}
+        public string? LastName { get; set; }
 
-        [AllowedValues("Ponda","Pernem","Bardez")]
-        public string Taluka{get; set;} = string.Empty;
+        [AllowedValues("Ponda", "Pernem", "Bardez")]
+        public string Taluka { get; set; } = string.Empty;
 
 
         [Required]
         [DataType(DataType.Date)]
-        public DateTime DOB{get; set;}
+        public DateTime DOB { get; set; }
 
-        
+
     }
 }
