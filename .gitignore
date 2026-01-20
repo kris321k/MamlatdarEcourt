@@ -1,0 +1,25 @@
+# =========================
+# ASP.NET Core
+# =========================
+bin/
+obj/
+
+# =========================
+# App settings (SECRETS)
+# =========================
+appsettings.Development.json
+appsettings.Production.json
+
+# =========================
+# Environment variables
+# =========================
+.env
+.env.*
+
+# =========================
+# IDE / OS
+# =========================
+.vs/
+.vscode/
+*.user
+*.suo
