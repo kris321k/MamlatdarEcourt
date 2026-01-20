@@ -24,11 +24,10 @@ namespace MamlatdarEcourt.DTOS
         [DataType(DataType.Date)]
 
         public DateTime DOB { get; set; }
-
+        
         [Required]
         [EmailAddress]
         public string Email { get; set; } = string.Empty;
-
-
+        
     }
 }

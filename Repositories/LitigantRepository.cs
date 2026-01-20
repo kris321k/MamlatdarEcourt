@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Identity;
 using MamlatdarEcourt.Models;
 using MamlatdarEcourt.DTOS;
 using StackExchange.Redis;
+using MamlatdarEcourt.Services;
 
 namespace MamlatdarEcourt.Repositories
 {
@@ -10,14 +11,17 @@ namespace MamlatdarEcourt.Repositories
         private readonly UserManager<User> _userManager;
         private readonly RoleManager<IdentityRole> _roleManager;
 
+
         public LitigantRepository(UserManager<User> userManager, RoleManager<IdentityRole> roleManager)
         {
             _userManager = userManager;
             _roleManager = roleManager;
 
         }
+
         public async Task<IdentityResult> CreateAsync(UserRegister userDto)
         {
+
             var user = new User
             {
                 UserName = userDto.Email,
@@ -38,10 +42,9 @@ namespace MamlatdarEcourt.Repositories
         {
             if (string.IsNullOrWhiteSpace(email))
             {
-
                 return null;
-
             }
+
             return await _userManager.FindByEmailAsync(email);
         }
 
@@ -50,5 +53,19 @@ namespace MamlatdarEcourt.Repositories
         {
             return await _userManager.AddToRoleAsync(user, rolename);
         }
+
+
+
+        public async Task<bool> IsInRoleAsync(User user, string rolename)
+        {
+            return await _userManager.IsInRoleAsync(user, rolename);
+        }
+
+
+        public async Task<bool> CheckPasswordAsync(User user, string Password)
+        {
+            return await _userManager.CheckPasswordAsync(user, Password);
+        }
+
     }
 }

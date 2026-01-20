@@ -26,6 +26,7 @@ namespace MamlatdarEcourt.Services
         public async Task<string> SendOtpAsync(string email, UserRegister dto)
         {
             var otp = GenerateOtp();
+            Console.WriteLine(otp);
             var hashedOtp = HashHelper.Hash(otp);
 
             var sessionId = Guid.NewGuid().ToString();
@@ -37,6 +38,10 @@ namespace MamlatdarEcourt.Services
                 PendingUser = dto,
                 HashedOtp = hashedOtp
             };
+
+
+
+            Console.WriteLine(sessionData.HashedOtp);
 
             _cache.Set($"OtpSession:{sessionId}", sessionData, TimeSpan.FromMinutes(5));
 
@@ -54,7 +59,7 @@ namespace MamlatdarEcourt.Services
             {
                 From = new MailAddress(_config.GetValue<string>("Email:From")!),
                 Subject = "Your OTP Code",
-                Body = $"Your OTP is: {otp}",
+                Body = $"Hi {dto.FirstName} {dto.LastName} your verfication OTP is: {otp}/n PLEASE DO NOT SHARE WITH ANYONE",
                 IsBodyHtml = false
             };
 
@@ -85,6 +90,7 @@ namespace MamlatdarEcourt.Services
             return HashHelper.ConstantTimeEquals(sessionData?.HashedOtp, enteredHash);
         }
 
+        
         public OtpSession? GetUserData(string sessionId)
         {
             _cache.TryGetValue($"OtpSession:{sessionId}", out OtpSession? sessionData);

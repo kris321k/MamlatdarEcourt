@@ -1,0 +1,18 @@
+# ASP.NET Core sensitive config
+appsettings.Development.json
+appsettings.Production.json
+
+# Environment variables
+.env
+.env.*
+
+# Build output
+bin/
+obj/
+
+# User secrets
+secrets.json
+
+# OS / IDE
+.vs/
+.vscode/

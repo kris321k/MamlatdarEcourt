@@ -1,11 +1,12 @@
 using Microsoft.AspNetCore.Mvc;
 using MamlatdarEcourt.DTOS;
 using MamlatdarEcourt.Services;
+using StackExchange.Redis;
 
 namespace MamlatdarEcourt.Controllers
 {
     [ApiController]
-    [Route("api/auth")]
+    [Route("api/[controller]")]
     public class UserAuthController : ControllerBase
     {
         private readonly LitigantAuthService _litigantAuthService;
@@ -50,6 +51,7 @@ namespace MamlatdarEcourt.Controllers
             }
         }
 
+        
         [HttpPost("verify-otp")]
         public async Task<IActionResult> VerifyOtp(
             [FromBody] VerifyDto otpDto)
@@ -76,6 +78,16 @@ namespace MamlatdarEcourt.Controllers
             if (!result.Succeeded)
                 return BadRequest("Error creating litigant.");
 
+            var User = await _litigantAuthService.FindLigitantByEmail(sessionData.PendingUser.Email);
+
+            var RoleAssigned = await _litigantAuthService.AddToRoleAsync(User!);
+
+            
+            if (!RoleAssigned.Succeeded)
+            {
+                return BadRequest("Error Assiging the Role");
+            }
+
             _otpService.Clear(otpDto.SessionId);
 
             return Ok(new
@@ -83,5 +95,25 @@ namespace MamlatdarEcourt.Controllers
                 message = "Litigant registered successfully"
             });
         }
+
+        [HttpPost("verify-login")]
+
+        public async Task<IActionResult> verifyLogin(LoginDto _loginDto)
+        {
+
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            var SessionToken = await _litigantAuthService.LoginAsync(_loginDto);
+
+            if (SessionToken == null) return Unauthorized("login credentials not valid");
+
+            return Ok(new { message = SessionToken });
+
+
+        }
     }
+
 }
