@@ -39,7 +39,7 @@ builder.Services.AddIdentity<User, IdentityRole>(options =>
 builder.Services.AddAuthentication();
 builder.Services.AddAuthorization();
 
-// CORS for frontend (IMPORTANT)
+// CORS
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAll",
@@ -48,7 +48,7 @@ builder.Services.AddCors(options =>
                         .AllowAnyMethod());
 });
 
-// Swagger (Optional but useful)
+// Swagger
 builder.Services.AddEndpointsApiExplorer();
 
 // Services
@@ -60,7 +60,6 @@ builder.Services.AddScoped<TokenService>();
 builder.Services.AddMemoryCache();
 
 var app = builder.Build();
-
 
 // Seed Roles
 using (var scope = app.Services.CreateScope())
@@ -79,7 +78,11 @@ using (var scope = app.Services.CreateScope())
     }
 }
 
-app.UseHttpsRedirection();
+// ❌ Disable HTTPS redirect in Railway production
+if (!app.Environment.IsProduction())
+{
+    app.UseHttpsRedirection();
+}
 
 app.UseCors("AllowAll");
 
@@ -87,5 +90,9 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+
+// ✅ ADD THIS FOR RAILWAY PORT FIX
+var port = Environment.GetEnvironmentVariable("PORT") ?? "8080";
+app.Urls.Add($"http://*:{port}");
 
 app.Run();
