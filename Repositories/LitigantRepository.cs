@@ -55,7 +55,6 @@ namespace MamlatdarEcourt.Repositories
         }
 
 
-
         public async Task<bool> IsInRoleAsync(User user, string rolename)
         {
             return await _userManager.IsInRoleAsync(user, rolename);
