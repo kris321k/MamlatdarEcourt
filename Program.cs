@@ -8,12 +8,12 @@ using MamlatdarEcourt.Repositories;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Controllers + Enum JSON
 builder.Services.AddControllers()
     .AddJsonOptions(options =>
     {
-        options.JsonSerializerOptions.Converters.Add(
-            new JsonStringEnumConverter()
-        );
+        options.JsonSerializerOptions.Converters
+            .Add(new JsonStringEnumConverter());
     });
 
 // SQL Server Connection
@@ -23,7 +23,7 @@ builder.Services.AddDbContext<AppDbContext>(options =>
     )
 );
 
-// Identity Setup
+// Identity
 builder.Services.AddIdentity<User, IdentityRole>(options =>
 {
     options.Password.RequireDigit = true;
@@ -35,21 +35,25 @@ builder.Services.AddIdentity<User, IdentityRole>(options =>
 .AddEntityFrameworkStores<AppDbContext>()
 .AddDefaultTokenProviders();
 
-// Auth
+// Authentication & Authorization
 builder.Services.AddAuthentication();
 builder.Services.AddAuthorization();
 
-// CORS
+// CORS (Allow frontend connection)
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowAll",
-        policy => policy.AllowAnyOrigin()
-                        .AllowAnyHeader()
-                        .AllowAnyMethod());
+    options.AddPolicy("AllowFrontend",
+        policy =>
+        {
+            policy.WithOrigins("http://localhost:5173")
+                  .AllowAnyHeader()
+                  .AllowAnyMethod();
+        });
 });
 
 // Swagger
 builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
 
 // Services
 builder.Services.AddScoped<LitigantAuthService>();
@@ -60,6 +64,16 @@ builder.Services.AddScoped<TokenService>();
 builder.Services.AddMemoryCache();
 
 var app = builder.Build();
+app.UseCors("AllowFrontend");
+
+
+
+
+
+app.UseAuthentication();
+app.UseAuthorization();
+
+app.MapControllers();
 
 // Seed Roles
 using (var scope = app.Services.CreateScope())
@@ -77,22 +91,5 @@ using (var scope = app.Services.CreateScope())
         }
     }
 }
-
-// ❌ Disable HTTPS redirect in Railway production
-if (!app.Environment.IsProduction())
-{
-    app.UseHttpsRedirection();
-}
-
-app.UseCors("AllowAll");
-
-app.UseAuthentication();
-app.UseAuthorization();
-
-app.MapControllers();
-
-// ✅ ADD THIS FOR RAILWAY PORT FIX
-var port = Environment.GetEnvironmentVariable("PORT") ?? "8080";
-app.Urls.Add($"http://*:{port}");
 
 app.Run();

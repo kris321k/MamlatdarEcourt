@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace MamlatdarEcourt.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20251229015658_Intial")]
-    partial class Intial
+    [Migration("20260218052313_IntialCreate")]
+    partial class IntialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -27,11 +27,8 @@ namespace MamlatdarEcourt.Migrations
 
             modelBuilder.Entity("MamlatdarEcourt.Models.Advocate", b =>
                 {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    b.Property<string>("Id")
+                        .HasColumnType("nvarchar(450)");
 
                     b.Property<string>("BarNumber")
                         .IsRequired()
