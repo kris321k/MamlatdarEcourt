@@ -22,40 +22,38 @@ namespace MamlatdarEcourt.Services
         public async Task<string> CreateTokenAsync(User user)
         {
             if (string.IsNullOrWhiteSpace(user.Email))
-            {
-                throw new InvalidOperationException("User email is required to generate JWT.");
-            }
+                throw new InvalidOperationException("User email is required.");
 
             if (string.IsNullOrWhiteSpace(user.Id))
-            {
                 throw new InvalidOperationException("User ID is missing.");
-            }
 
+            // ✅ FIXED CLAIMS
             var claims = new List<Claim>
             {
-                new Claim(JwtRegisteredClaimNames.Sub, user.Email),
-                new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
+                new Claim(ClaimTypes.Name, user.Email),              // 🔥 IMPORTANT
                 new Claim(ClaimTypes.NameIdentifier, user.Id),
-                new Claim(ClaimTypes.Email, user.Email)
+                new Claim(ClaimTypes.Email, user.Email),
+                new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
             };
 
+            // Add roles
             var roles = await _userManager.GetRolesAsync(user);
             foreach (var role in roles)
             {
                 claims.Add(new Claim(ClaimTypes.Role, role));
             }
 
-            var jwtKey = _config.GetValue<string>("Jwt:Key")
-                ?? throw new InvalidOperationException("JWT Key is missing in configuration.");
+            var jwtKey = _config["Jwt:Key"]
+                ?? throw new InvalidOperationException("JWT Key missing.");
 
-            var issuer = _config.GetValue<string>("Jwt:Issuer")
-                ?? throw new InvalidOperationException("JWT Issuer is missing.");
+            var issuer = _config["Jwt:Issuer"]
+                ?? throw new InvalidOperationException("JWT Issuer missing.");
 
-            var audience = _config.GetValue<string>("Jwt:Audience")
-                ?? throw new InvalidOperationException("JWT Audience is missing.");
+            var audience = _config["Jwt:Audience"]
+                ?? throw new InvalidOperationException("JWT Audience missing.");
 
-            var duration = _config.GetValue<int?>("Jwt:DurationInMinutes")
-                ?? throw new InvalidOperationException("JWT Duration is missing.");
+            var duration = int.Parse(_config["Jwt:DurationInMinutes"]
+                ?? throw new InvalidOperationException("JWT Duration missing."));
 
             var signingKey = new SymmetricSecurityKey(
                 Encoding.UTF8.GetBytes(jwtKey)
@@ -74,7 +72,6 @@ namespace MamlatdarEcourt.Services
                 signingCredentials: credentials
             );
 
-            
             return new JwtSecurityTokenHandler().WriteToken(token);
         }
     }

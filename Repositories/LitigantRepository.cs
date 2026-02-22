@@ -66,5 +66,11 @@ namespace MamlatdarEcourt.Repositories
             return await _userManager.CheckPasswordAsync(user, Password);
         }
 
+
+        public async Task<User?> FindUserById(string Id)
+        {
+            return await _userManager.FindByIdAsync(Id);
+        }
+
     }
 }

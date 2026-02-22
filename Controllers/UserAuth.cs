@@ -2,6 +2,9 @@ using Microsoft.AspNetCore.Mvc;
 using MamlatdarEcourt.DTOS;
 using MamlatdarEcourt.Services;
 using StackExchange.Redis;
+using System.Text;
+using Microsoft.AspNetCore.Authorization;
+using System.Security.Claims;
 
 namespace MamlatdarEcourt.Controllers
 {
@@ -19,7 +22,6 @@ namespace MamlatdarEcourt.Controllers
             _litigantAuthService = litigantAuthService;
             _otpService = otpService;
         }
-
 
         [HttpPost("request-otp")]
         public async Task<IActionResult> RequestOtp([FromBody] UserRegister userDto)
@@ -44,51 +46,62 @@ namespace MamlatdarEcourt.Controllers
                     otpSessionId = sessionId
                 });
             }
-            catch
+            catch (Exception e)
             {
-                return StatusCode(500,
-                    "Failed to send OTP. Please try again.");
+                return StatusCode(500, new { Message = "Failed to send the otp" });
             }
         }
 
-        
         [HttpPost("verify-otp")]
-        public async Task<IActionResult> VerifyOtp(
-            [FromBody] VerifyDto otpDto)
+        public async Task<IActionResult> VerifyOtp([FromBody] VerifyDto otpDto)
         {
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
             var isValid =
-                _otpService.ValidateOtp(otpDto.SessionId, otpDto.Otp);
+                _otpService.ValidateOtp(otpDto.otpSessionId, otpDto.otp);
 
             if (!isValid)
+            {
+                Console.WriteLine("invalid otp");
+
                 return BadRequest("Invalid or expired OTP.");
+            }
 
             var sessionData =
-                _otpService.GetUserData(otpDto.SessionId);
+                _otpService.GetUserData(otpDto.otpSessionId);
 
             if (sessionData == null || sessionData.PendingUser == null)
+            {
+                Console.WriteLine("OTP session expired");
                 return BadRequest("OTP session expired.");
+
+            }
 
             var result =
                 await _litigantAuthService
                     .RegisterLigitantAsync(sessionData.PendingUser);
 
+            Console.WriteLine(sessionData.PendingUser.Email);
+            Console.WriteLine(sessionData.PendingUser.DOB);
+
             if (!result.Succeeded)
-                return BadRequest("Error creating litigant.");
-
-            var User = await _litigantAuthService.FindLigitantByEmail(sessionData.PendingUser.Email);
-
-            var RoleAssigned = await _litigantAuthService.AddToRoleAsync(User!);
-
-            
-            if (!RoleAssigned.Succeeded)
             {
-                return BadRequest("Error Assiging the Role");
+                Console.WriteLine("Not succeeded creating the litigant");
+                var errors = result.Errors.Select(e => e.Description).ToList();
+                return BadRequest(new { message = "Error creating litigant.", errors });
             }
+            var user =
+                await _litigantAuthService
+                    .FindLigitantByEmail(sessionData.PendingUser.Email);
 
-            _otpService.Clear(otpDto.SessionId);
+            var roleAssigned =
+                await _litigantAuthService.AddToRoleAsync(user!);
+
+            if (!roleAssigned.Succeeded)
+                return BadRequest("Error assigning the role");
+
+            _otpService.Clear(otpDto.otpSessionId);
 
             return Ok(new
             {
@@ -96,26 +109,52 @@ namespace MamlatdarEcourt.Controllers
             });
         }
 
-        [HttpPost("verify-login")]
 
-        public async Task<IActionResult> verifyLogin(LoginDto _loginDto)
+        [HttpPost("verify-login")]
+        public async Task<IActionResult> VerifyLogin([FromBody] LoginDto loginDto)
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            var sessionToken =
+                await _litigantAuthService.LoginAsync(loginDto);
+
+            if (sessionToken == null)
+                return Unauthorized("Login credentials not valid");
+
+            Console.WriteLine(sessionToken);
+
+            var cookieOptions = new CookieOptions
+            {
+                HttpOnly = true,
+                Secure = false,
+                SameSite = SameSiteMode.Lax,
+                Expires = DateTime.UtcNow.AddHours(2),
+            };
+
+            Response.Cookies.Append(
+                "SecureSessionToken",
+                sessionToken,
+                cookieOptions);
+
+            return Ok(new { message = "Login successful" });
+        }
+
+        [Authorize]
+
+        [HttpGet("private")]
+
+        public async Task<IActionResult> PrivateEndpoint()
         {
 
-            if (!ModelState.IsValid)
+            var name = User.Identity?.Name;
+        
+            return Ok(new
             {
-                return BadRequest(ModelState);
-            }
-
-            var SessionToken = await _litigantAuthService.LoginAsync(_loginDto);
-
-            if (SessionToken == null) return Unauthorized("login credentials not valid");
-
-
-
-            return Ok(new { message = SessionToken });
-
-
+                name = User.Identity?.Name,
+                litigant = _litigantAuthService.FindLigitantByEmail(name!),
+                UserId = User.FindFirstValue(ClaimTypes.NameIdentifier)
+            });
         }
     }
-
 }

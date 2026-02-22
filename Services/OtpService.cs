@@ -26,7 +26,6 @@ namespace MamlatdarEcourt.Services
         public async Task<string> SendOtpAsync(string email, UserRegister dto)
         {
             var otp = GenerateOtp();
-            Console.WriteLine(otp);
             var hashedOtp = HashHelper.Hash(otp);
 
             var sessionId = Guid.NewGuid().ToString();
@@ -39,10 +38,7 @@ namespace MamlatdarEcourt.Services
                 HashedOtp = hashedOtp
             };
 
-
-
-            Console.WriteLine(sessionData.HashedOtp);
-
+            
             _cache.Set($"OtpSession:{sessionId}", sessionData, TimeSpan.FromMinutes(5));
 
             var smtpClient = new SmtpClient(_config["Email:Host"])
@@ -55,9 +51,13 @@ namespace MamlatdarEcourt.Services
                 EnableSsl = true
             };
 
+
+            var SenderEmail = _config.GetValue<string>("Email:Username")!;
+
+
             var mail = new MailMessage
             {
-                From = new MailAddress(_config.GetValue<string>("Email:From")!),
+                From = new MailAddress(_config.GetValue<string>("Email:Username")!),
                 Subject = "Your OTP Code",
                 Body = $"Hi {dto.FirstName} {dto.LastName} your verfication OTP is: {otp}/n PLEASE DO NOT SHARE WITH ANYONE",
                 IsBodyHtml = false
@@ -74,23 +74,36 @@ namespace MamlatdarEcourt.Services
                 throw new Exception("An error occurred while sending the OTP");
             }
 
+
+            Console.WriteLine($"this is the system generated {sessionId}");
+
             return sessionId;
         }
 
         public bool ValidateOtp(string sessionId, string otp)
         {
+            Console.WriteLine($"this is user provided sessionId {sessionId}");
+
             if (!_cache.TryGetValue($"OtpSession:{sessionId}", out OtpSession? sessionData))
+            {
+                Console.WriteLine("wrong session id");
+
                 return false;
+            }
 
             if (sessionData?.ExpiresAt < DateTime.UtcNow)
+            {
+                Console.WriteLine("the token expired");
                 return false;
+            }
 
             var enteredHash = HashHelper.Hash(otp);
+
 
             return HashHelper.ConstantTimeEquals(sessionData?.HashedOtp, enteredHash);
         }
 
-        
+
         public OtpSession? GetUserData(string sessionId)
         {
             _cache.TryGetValue($"OtpSession:{sessionId}", out OtpSession? sessionData);

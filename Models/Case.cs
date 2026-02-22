@@ -1,6 +1,5 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using Microsoft.Extensions.Configuration.UserSecrets;
 
 namespace MamlatdarEcourt.Models
 {
@@ -12,10 +11,16 @@ namespace MamlatdarEcourt.Models
         HearingInProgress,
         JudgmentPassed,
         Closed
-
     }
 
-
+    public enum DisputeCategory
+    {
+        Tenancy,
+        LandMutation,
+        PropertyDispute,
+        RevenueAppeal,
+        AgriculturalIssue
+    }
 
     public class Case
     {
@@ -23,15 +28,25 @@ namespace MamlatdarEcourt.Models
         public int Id { get; set; }
 
         [Required]
-        public string DisputeCategory { get; set; } = string.Empty;
+        [MaxLength(50)]
+        public string CaseNumber { get; set; } = string.Empty;
 
         [Required]
-        public string UserId { get; set; } = String.Empty;
+        [MaxLength(200)]
+        public string Title { get; set; } = string.Empty;
 
-        [ForeignKey(nameof(UserId))]
+        [Required]
+        public DisputeCategory DisputeCategory { get; set; }
 
+        // Foreign Key
+        [Required]
+        public string ApplicantId { get; set; } = string.Empty;
+
+        [ForeignKey(nameof(ApplicantId))]
         public User? Applicant { get; set; }
+
         public CaseStatus Status { get; set; } = CaseStatus.Filed;
 
+        public DateTime FiledDate { get; set; } = DateTime.UtcNow;
     }
 }
