@@ -19,7 +19,7 @@ namespace MamlatdarEcourt.Services
         }
 
 
-        public async Task<Case> CreateCaseAsync(CaseRegisterDto c, string ApplicantId)
+        public async Task<Case> CreateCaseAsync(CaseRegisterDto c, string ApplicantId)  
         {
             c.CaseNumber = await _caseRepo.GetLastSerialAsync(ApplicantId);
 
@@ -28,6 +28,11 @@ namespace MamlatdarEcourt.Services
 
 
         
+        public async Task<IEnumerable<Case>> FindCaseByApplicantId(string UserId)
+        {
+            return await _caseRepo.FindCaseByApplicantId(UserId);
+        }
+
 
     }
 }

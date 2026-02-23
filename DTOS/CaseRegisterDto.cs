@@ -16,7 +16,6 @@ namespace MamlatdarEcourt.DTOS
         [Required]
         public DisputeCategory DisputeCategory { get; set; }
 
-        // Foreign Key
-
+  
     }
 }

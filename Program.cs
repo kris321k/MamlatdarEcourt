@@ -62,7 +62,6 @@ builder.Services.AddAuthentication(options =>
             }
 
 
-            Console.WriteLine("Janhavi ");
             return Task.CompletedTask;
         }
     };
@@ -105,6 +104,8 @@ builder.Services.AddScoped<LitigantAuthService>();
 builder.Services.AddScoped<LitigantRepository>();
 builder.Services.AddScoped<OtpService>();
 builder.Services.AddScoped<TokenService>();
+builder.Services.AddScoped<CaseService>();
+builder.Services.AddScoped<CaseRepository>();
 
 builder.Services.AddMemoryCache();
 

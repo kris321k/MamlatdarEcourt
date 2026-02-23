@@ -43,17 +43,42 @@ namespace MamlatdarEcourt.Controllers
 
             try
             {
-                var Case = _cService.CreateCaseAsync(c, ApplicantId!);
+                var createdCase = await _cService.CreateCaseAsync(c, ApplicantId!);
 
-                return StatusCode(201);
+                return StatusCode(201, createdCase);
             }
 
             catch (Exception ex)
             {
-                
                 return StatusCode(500, new
                 {
-                    message = "something went wrong creating the case"
+                    message = "something went wrong creating the case",
+                    detail = ex.Message
+                });
+            }
+        }
+
+
+        [Authorize(Roles = "litigant")]
+
+        [HttpGet("get-all-cases")]
+
+        public async Task<IActionResult> GetAllCases()
+        {
+
+            try
+            {
+
+                var UserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                var Cases = await _cService.FindCaseByApplicantId(UserId!);
+                return Ok(Cases);
+
+            }
+            catch (Exception e)
+            {
+                return StatusCode(500, new
+                {
+                    message = "Error fetching the cases"
                 });
             }
         }
